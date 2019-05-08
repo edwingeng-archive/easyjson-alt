@@ -92,6 +92,7 @@ func (g *Generator) buildHeader() string {
 		pkgEasyJSON:     "easyjson",
 		"encoding/json": "json",
 		"fmt":           "fmt",
+		"time":          "time",
 	}
 
 	var sb = &strings.Builder{}
@@ -126,6 +127,7 @@ func (g *Generator) buildHeader() string {
 	fmt.Fprintln(sb, "   _ *jwriter.Writer")
 	fmt.Fprintln(sb, "   _ easyjson.Marshaler")
 	fmt.Fprintln(sb, "   _ fmt.Stringer")
+	fmt.Fprintln(sb, "   _ time.Time")
 	fmt.Fprintln(sb, ")")
 
 	fmt.Fprintln(sb)
