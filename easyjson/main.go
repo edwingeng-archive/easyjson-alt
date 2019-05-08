@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mailru/easyjson/bootstrap"
+	"github.com/edwingeng/easyjson-alt/bootstrap"
 	// Reference the gen package to be friendly to vendoring tools,
 	// as it is an indirect dependency.
 	// (The temporary bootstrapping code uses it.)
@@ -29,30 +29,39 @@ var specifiedName = flag.String("output_filename", "", "specify the filename of 
 var processPkg = flag.Bool("pkg", false, "process the whole package instead of just the given file")
 var disallowUnknownFields = flag.Bool("disallow_unknown_fields", false, "return error if any unknown field in json appeared")
 
-func generate(fname string) (err error) {
-	fInfo, err := os.Stat(fname)
-	if err != nil {
-		return err
-	}
-
-	p := parser.Parser{AllStructs: *allStructs}
-	if err := p.Parse(fname, fInfo.IsDir()); err != nil {
-		return fmt.Errorf("Error parsing %v: %v", fname, err)
-	}
-
-	var outName string
-	if fInfo.IsDir() {
-		outName = filepath.Join(fname, p.PkgName+"_easyjson.go")
-	} else {
-		if s := strings.TrimSuffix(fname, ".go"); s == fname {
-			return errors.New("Filename must end in '.go'")
-		} else {
-			outName = s + "_easyjson.go"
+func generate(files []string) (err error) {
+	var p *parser.Parser
+	var a []bootstrap.FileInfo
+	for _, fname := range files {
+		fInfo, err := os.Stat(fname)
+		if err != nil {
+			return err
 		}
-	}
 
-	if *specifiedName != "" {
-		outName = *specifiedName
+		p = &parser.Parser{AllStructs: *allStructs}
+		if err := p.Parse(fname, fInfo.IsDir()); err != nil {
+			return fmt.Errorf("Error parsing %v: %v", fname, err)
+		}
+
+		var outName string
+		if fInfo.IsDir() {
+			outName = filepath.Join(fname, p.PkgName+"_easyjson.go")
+		} else {
+			if s := strings.TrimSuffix(fname, ".go"); s == fname {
+				return errors.New("Filename must end in '.go'")
+			} else {
+				outName = s + "_easyjson.go"
+			}
+		}
+
+		if *specifiedName != "" {
+			outName = *specifiedName
+		}
+
+		a = append(a, bootstrap.FileInfo{
+			Types:   p.StructNames,
+			OutName: outName,
+		})
 	}
 
 	var trimmedBuildTags string
@@ -64,14 +73,13 @@ func generate(fname string) (err error) {
 		BuildTags:             trimmedBuildTags,
 		PkgPath:               p.PkgPath,
 		PkgName:               p.PkgName,
-		Types:                 p.StructNames,
+		FileInfoList:          a,
 		SnakeCase:             *snakeCase,
 		LowerCamelCase:        *lowerCamelCase,
 		NoStdMarshalers:       *noStdMarshalers,
 		DisallowUnknownFields: *disallowUnknownFields,
 		OmitEmpty:             *omitEmpty,
 		LeaveTemps:            *leaveTemps,
-		OutName:               outName,
 		StubsOnly:             *stubs,
 		NoFormat:              *noformat,
 	}
@@ -80,6 +88,19 @@ func generate(fname string) (err error) {
 		return fmt.Errorf("Bootstrap failed: %v", err)
 	}
 	return nil
+}
+
+func groupFiles(files []string) (map[string][]string, error) {
+	m := make(map[string][]string)
+	for _, fname := range files {
+		abs, err := filepath.Abs(fname)
+		if err != nil {
+			return nil, err
+		}
+		dir := filepath.Dir(abs)
+		m[dir] = append(m[dir], abs)
+	}
+	return m, nil
 }
 
 func main() {
@@ -99,8 +120,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, fname := range files {
-		if err := generate(fname); err != nil {
+	groups, err := groupFiles(files)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	for _, group := range groups {
+		if err := generate(group); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
