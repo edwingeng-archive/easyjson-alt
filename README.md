@@ -14,7 +14,7 @@ enabling `omitempty` behavior by default.
 ## Usage
 ```sh
 # install
-go get -u github.com/mailru/easyjson/...
+go get -u github.com/edwingeng/easyjson-alt/easyjson
 
 # run
 easyjson -all <file>.go
