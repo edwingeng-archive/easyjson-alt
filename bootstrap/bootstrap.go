@@ -213,19 +213,16 @@ func (g *Generator) Run() error {
 		return err
 	}
 
-	if !g.NoFormat {
-		var files []string
-		for _, fi := range g.FileInfoList {
-			files = append(files, fi.OutName)
-		}
-		cmd = exec.Command("gofmt", append([]string{"-w"}, files...)...)
-		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
-
-		if err = cmd.Run(); err != nil {
-			return err
-		}
+	if g.NoFormat {
+		return nil
 	}
 
-	return nil
+	var files []string
+	for _, fi := range g.FileInfoList {
+		files = append(files, fi.OutName)
+	}
+	cmd = exec.Command("gofmt", append([]string{"-w"}, files...)...)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	return cmd.Run()
 }
