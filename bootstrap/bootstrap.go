@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 )
 
@@ -24,22 +25,27 @@ type FileInfo struct {
 	OutName string
 }
 
+var buildFlagsRegexp = regexp.MustCompile("'.+'|\".+\"|\\S+")
+
 type Generator struct {
 	PkgPath, PkgName string
 
 	FileInfoList []FileInfo
 
-	NoStdMarshalers       bool
-	SnakeCase             bool
-	LowerCamelCase        bool
-	OmitEmpty             bool
-	DisallowUnknownFields bool
+	NoStdMarshalers          bool
+	SnakeCase                bool
+	LowerCamelCase           bool
+	OmitEmpty                bool
+	DisallowUnknownFields    bool
+	SkipMemberNameUnescaping bool
 
-	BuildTags string
+	BuildTags     string
+	GenBuildFlags string
 
-	StubsOnly  bool
-	LeaveTemps bool
-	NoFormat   bool
+	StubsOnly   bool
+	LeaveTemps  bool
+	NoFormat    bool
+	SimpleBytes bool
 }
 
 // writeStub outputs an initial stub for marshalers/unmarshalers so that the package
@@ -146,6 +152,12 @@ func (g *Generator) writeMain() (path string, err error) {
 		if g.DisallowUnknownFields {
 			fmt.Fprintln(f, "  g.DisallowUnknownFields()")
 		}
+		if g.SimpleBytes {
+			fmt.Fprintln(f, "  g.SimpleBytes()")
+		}
+		if g.SkipMemberNameUnescaping {
+			fmt.Fprintln(f, "  g.SkipMemberNameUnescaping()")
+		}
 
 		sort.Strings(fi.Types)
 		for _, v := range fi.Types {
@@ -206,7 +218,14 @@ func (g *Generator) Run() error {
 		defer os.Remove(path)
 	}
 
-	cmd := exec.Command("go", "run", "-tags", g.BuildTags, filepath.Base(path))
+	execArgs := []string{"run"}
+	if g.GenBuildFlags != "" {
+		buildFlags := buildFlagsRegexp.FindAllString(g.GenBuildFlags, -1)
+		execArgs = append(execArgs, buildFlags...)
+	}
+	execArgs = append(execArgs, "-tags", g.BuildTags, filepath.Base(path))
+	cmd := exec.Command("go", execArgs...)
+
 	cmd.Stderr = os.Stderr
 	cmd.Dir = filepath.Dir(path)
 	if err = cmd.Run(); err != nil {

@@ -1,4 +1,4 @@
-github.com/edwingeng/easyjson v0.0.0-20190508062953-10368775a286 h1:AZmYbs5O8+FsDwYuGQmcEovVW+0ILnNC9FFu9gnCZIo=
-github.com/edwingeng/easyjson v0.0.0-20190508062953-10368775a286/go.mod h1:8Db6a8b4MGQg08ypk+IK5qQDIGPdVGGp+9RlA1FFRnE=
-github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 h1:wL11wNW7dhKIcRCHSm4sHKPWz0tt4mwBsVodG7+Xyqg=
-github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
+github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=
+github.com/josharian/intern v1.0.0/go.mod h1:5DoeVV0s6jJacbCEi61lwdGj/aVlrQvzHFFd8Hwg//Y=
+github.com/mailru/easyjson v0.7.7-0.20201007175905-fca00f44f19d h1:1QWgCQKhx5SP4Wyxlcml2Wcz4bP0b16IVy3jeJfpLOo=
+github.com/mailru/easyjson v0.7.7-0.20201007175905-fca00f44f19d/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
